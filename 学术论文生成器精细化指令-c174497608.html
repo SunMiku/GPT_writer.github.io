@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>学术论文大模型指令生成器</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .fade-in {
+            animation: fadeIn 0.5s ease-in-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .form-label {
+            @apply block text-sm font-medium text-gray-700 mb-1;
+        }
+        .form-textarea, .form-input {
+            @apply block w-full shadow-sm sm:text-sm border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 transition-shadow duration-200;
+        }
+        .btn {
+            @apply inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg shadow-sm text-white focus:outline-none focus:ring-2 focus:ring-offset-2 transition-all duration-300;
+        }
+        .btn-primary {
+            @apply bg-indigo-600 hover:bg-indigo-700 focus:ring-indigo-500;
+        }
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+        }
+        .btn-secondary {
+            @apply bg-gray-100 hover:bg-gray-200 text-gray-700 focus:ring-gray-500;
+        }
+        /* Custom scrollbar for output */
+        #output::-webkit-scrollbar {
+            width: 8px;
+        }
+        #output::-webkit-scrollbar-track {
+            background: #f1f5f9;
+            border-radius: 10px;
+        }
+        #output::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 10px;
+        }
+        #output::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-800">
+
+    <div class="container mx-auto p-4 sm:p-6 lg:p-8 max-w-6xl">
+        <header class="text-center mb-10 fade-in">
+            <h1 class="text-3xl sm:text-4xl font-bold text-gray-900">学术论文大模型指令生成器</h1>
+            <p class="mt-3 text-lg text-gray-600">遵循《学术论文写作卡》精细化结构，生成符合IEEE Transactions标准的英文写作指令</p>
+        </header>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <!-- Input Section -->
+            <div class="bg-white p-6 rounded-xl shadow-lg border border-gray-200 fade-in" style="animation-delay: 0.1s;">
+                <h2 class="text-2xl font-semibold mb-5 text-gray-800 flex items-center"><i class="fa fa-pencil-square-o text-indigo-500 mr-3"></i>1. 请输入论文核心信息</h2>
+                <div class="space-y-5">
+                    <div class="grid grid-cols-1 sm:grid-cols-3 items-center gap-x-5">
+                        <label for="topic" class="form-label sm:text-right">研究方向/主题 (Topic)</label>
+                        <div class="sm:col-span-2">
+                            <input type="text" id="topic" class="form-input" placeholder="例如：高性能演化算法">
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-3 items-center gap-x-5">
+                        <label for="problem" class="form-label sm:text-right">具体要解决的问题 (Problem)</label>
+                        <div class="sm:col-span-2">
+                            <input type="text" id="problem" class="form-input" placeholder="例如：平衡探索与开发能力">
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-3 items-center gap-x-5">
+                        <label for="existing_flaws" class="form-label sm:text-right">现有方法的主要不足 (Flaws)</label>
+                        <div class="sm:col-span-2">
+                            <input type="text" id="existing_flaws" class="form-input" placeholder="例如：容易陷入局部最优">
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-3 items-center gap-x-5">
+                        <label for="method_name" class="form-label sm:text-right">方法/模型名称 (Method Name)</label>
+                        <div class="sm:col-span-2">
+                            <input type="text" id="method_name" class="form-input" placeholder="例如：SDLSO">
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-3 items-start gap-x-5">
+                        <label for="innovations" class="form-label sm:text-right pt-2">核心思想与创新点 (Innovations)</label>
+                        <div class="sm:col-span-2">
+                            <textarea id="innovations" rows="4" class="form-textarea" placeholder="例如：&#10;1. 提出一种新颖的协同学习策略，指导粒子向更优的 exemplars 学习，增强全局搜索能力。&#10;2. 设计了一种自适应参数调节机制，根据种群多样性动态调整惯性权重和学习因子。&#10;3. 引入了差分变异算子，在搜索后期增强种群多样性，有效跳出局部最优。"></textarea>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-3 items-center gap-x-5">
+                        <label for="experiments" class="form-label sm:text-right">实验设置与数据集 (Experiments)</label>
+                        <div class="sm:col-span-2">
+                            <input type="text" id="experiments" class="form-input" placeholder="例如：在 CEC2017 和 CEC2022 测试集上对比。">
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-3 items-center gap-x-5">
+                        <label for="results" class="form-label sm:text-right">总体实验结果 (Results Summary)</label>
+                        <div class="sm:col-span-2">
+                            <input type="text" id="results" class="form-input" placeholder="例如：性能显著优于对比算法。">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Output Section -->
+            <div class="bg-white p-6 rounded-xl shadow-lg border border-gray-200 fade-in" style="animation-delay: 0.2s;">
+                <h2 class="text-2xl font-semibold mb-5 text-gray-800 flex items-center"><i class="fa fa-cogs text-indigo-500 mr-3"></i>2. 生成并复制指令</h2>
+                <div class="flex flex-wrap gap-3 mb-5">
+                    <button id="generate-abstract" class="btn btn-primary"><i class="fa fa-file-text-o mr-2"></i>生成摘要</button>
+                    <button id="generate-intro" class="btn btn-primary"><i class="fa fa-comments-o mr-2"></i>生成引言</button>
+                    <button id="generate-conclusion" class="btn btn-primary"><i class="fa fa-flag-checkered mr-2"></i>生成结论</button>
+                </div>
+                
+                <div id="output-container" class="hidden">
+                    <div class="flex justify-between items-center mb-3">
+                         <h3 id="output-title" class="text-lg font-semibold text-indigo-600"></h3>
+                         <button id="copy-btn" class="btn btn-secondary text-sm"><i class="fa fa-clipboard mr-2"></i>复制内容</button>
+                    </div>
+                    <div id="output" class="mt-2 p-4 bg-gray-100 rounded-lg text-sm whitespace-pre-wrap h-96 overflow-y-auto border"></div>
+                </div>
+                 <div id="placeholder-output" class="mt-2 p-4 bg-gray-100 rounded-lg text-gray-500 h-96 flex flex-col items-center justify-center border-2 border-dashed">
+                    <i class="fa fa-magic text-5xl mb-4 text-gray-300"></i>
+                    <p>点击上方按钮生成指令</p>
+                </div>
+            </div>
+        </div>
+
+        <footer class="mt-12 text-center text-gray-500 text-sm fade-in">
+             <p>基于《学术论文写作卡-V5》构建 | 符合IEEE Transactions期刊格式规范</p>
+        </footer>
+    </div>
+
+    <script>
+        const inputs = {
+            topic: document.getElementById('topic'),
+            problem: document.getElementById('problem'),
+            existing_flaws: document.getElementById('existing_flaws'),
+            method_name: document.getElementById('method_name'),
+            innovations: document.getElementById('innovations'),
+            experiments: document.getElementById('experiments'),
+            results: document.getElementById('results')
+        };
+
+        const outputContainer = document.getElementById('output-container');
+        const outputDiv = document.getElementById('output');
+        const outputTitle = document.getElementById('output-title');
+        const placeholderOutput = document.getElementById('placeholder-output');
+        
+        const generateAbstractBtn = document.getElementById('generate-abstract');
+        const generateIntroBtn = document.getElementById('generate-intro');
+        const generateConclusionBtn = document.getElementById('generate-conclusion');
+        const copyBtn = document.getElementById('copy-btn');
+        const originalCopyBtnHTML = copyBtn.innerHTML;
+
+        function getValues() {
+            // Check for essential fields first.
+            if (inputs.topic.value.trim() === '' || inputs.method_name.value.trim() === '') {
+                alert('请至少填写“研究方向/主题”和“方法/模型名称”，以便生成有意义的指令。');
+                return null; // Indicate validation failure
+            }
+
+            const values = {};
+            for (const key in inputs) {
+                const value = inputs[key].value.trim();
+                let placeholder = inputs[key].placeholder;
+                // Clean up the "例如：" prefix from placeholders for better prompt integration
+                if (placeholder.startsWith('例如：')) {
+                    placeholder = placeholder.substring(4).trim();
+                }
+                values[key] = value !== '' ? value : placeholder;
+            }
+
+            // Special handling for innovations list formatting
+            const innovationsValue = inputs.innovations.value.trim();
+            let innovationsContent = innovationsValue !== '' ? innovationsValue : inputs.innovations.placeholder;
+            if (innovationsContent.startsWith('例如：')) {
+                innovationsContent = innovationsContent.substring(4).trim();
+            }
+
+            values.innovations_list = innovationsContent
+                .split('\n')
+                .filter(line => line.trim() !== '')
+                .map((line, index) => `${index + 1}. ${line.trim().replace(/^\d+\.\s*/, '')}`) // remove existing numbering
+                .join('\n');
+            
+            return values;
+        }
+
+        function displayOutput(title, content) {
+            placeholderOutput.classList.add('hidden');
+            outputContainer.classList.remove('hidden');
+            outputContainer.classList.add('fade-in');
+            outputTitle.textContent = `生成"${title}"指令`;
+            outputDiv.textContent = content;
+        }
+
+        function handleGenerateClick(generatorFn) {
+            const v = getValues();
+            if (!v) {
+                return; // Stop if validation failed in getValues
+            }
+            const prompt = generatorFn(v);
+            displayOutput(prompt.title, prompt.content.trim());
+        }
+
+        const abstractGenerator = (v) => ({
+            title: '摘要',
+            content: `
+You are a top-tier academic researcher in the field of Artificial Intelligence. Please write an abstract in English for an academic paper that adheres to the IEEE Transactions journal style, strictly following the sentence-by-sentence instruction template provided below based on the core information.
+
+Requirements:
+1.  **Strict Sentence-by-Sentence Correspondence**: Your output must strictly follow the structure and content requirements of the nine sentences below. Do not merge or omit sentences.
+2.  **Word Count Limit**: Each sentence has a suggested word limit, and the total word count must be under 250 words. No abbreviations are allowed in the abstract.
+3.  **Language and Style**: The entire text must be written in **English**. The grammar, vocabulary, and overall style must strictly conform to the high standards of **IEEE Transactions** journals.
+
+---
+**Core Information:**
+
+* **Field and Problem:** ${v.topic}. Specifically, this paper focuses on ${v.problem}.
+* **Shortcomings of Existing Methods:** ${v.existing_flaws}.
+* **Proposed Method:** ${v.method_name}.
+* **Core Innovations/Components:**
+${v.innovations_list}
+* **Experimental Setup:** ${v.experiments}.
+* **Main Results:** ${v.results}.
+
+---
+**Abstract Sentence-by-Sentence Template (Please generate the abstract strictly following this structure):**
+
+* **Sentence 1 (Problem Background, <20 words):** Based on the "Field and Problem," concisely introduce the background of the problem addressed in this paper, highlighting its importance and challenges.
+* **Sentence 2 (Shortcomings of Existing Methods, <20 words):** Based on "Shortcomings of Existing Methods," summarize the key deficiencies of current approaches in solving this problem in one sentence.
+* **Sentence 3 (Introduce Proposed Method, <15 words):** To address the aforementioned shortcomings, this paper proposes a novel method named "${v.method_name}".
+* **Sentence 4 (Core Components, <15 words):** Briefly state that the method consists of several core components (typically 2-3, based on the provided innovations).
+* **Sentence 5 (Component 1, <30 words):** Corresponding to the first core innovation, write "First,..." explaining its working principle and benefits.
+* **Sentence 6 (Component 2, <30 words):** Corresponding to the second core innovation, write "Second,..." explaining its working principle and benefits.
+* **Sentence 7 (Component 3, <30 words):** Corresponding to the third core innovation, write "Third,..." explaining its working principle and benefits. (This sentence can be omitted if there are only two innovations).
+* **Sentence 8 (Synergistic Advantage, <40 words):** Summarize how these components work together synergistically to provide a key overall advantage to the algorithm (e.g., better balance of exploration and exploitation, improved convergence speed).
+* **Sentence 9 (Experimental Validation, <40 words):** Based on the "Experimental Setup" and "Main Results," conclude by stating that extensive experiments on benchmark datasets against state-of-the-art algorithms have demonstrated the effectiveness and superiority of the proposed method.
+
+---
+Please start writing the abstract in English:
+`});
+
+        const introGenerator = (v) => ({
+            title: '引言',
+            content: `
+You are a senior editor for a leading journal in Artificial Intelligence. Please write an Introduction in English for an academic paper that adheres to the IEEE Transactions journal style, strictly following the paragraph-by-paragraph instruction template provided below based on the core information.
+
+Requirements:
+1.  **Strict Paragraph-by-Paragraph Correspondence**: Your output must strictly follow the structure and content requirements of the nine paragraphs below. Each point should form a separate paragraph.
+2.  **Logical Rigor**: Ensure a logical flow between paragraphs with smooth transitions.
+3.  **Language and Style**: The entire text must be written in formal, rigorous **English**, fully compliant with the top-tier standards of **IEEE Transactions** journals.
+
+---
+**Core Information:**
+
+* **Topic/Background:** ${v.topic}
+* **Specific Problem & Challenges:** ${v.problem}
+* **Motivation / Gaps in Research:** ${v.existing_flaws}
+* **Proposed Method:** ${v.method_name}
+* **Contributions:**
+${v.innovations_list}
+* **Overview of Experiments:** ${v.experiments}
+* **Overall Results:** ${v.results}
+
+---
+**Introduction Paragraph-by-Paragraph Template (Please generate the introduction strictly following this structure):**
+
+* **Paragraph 1 (Research Background):** Elaborate on the importance of the research area around the "Topic/Background." Then, specify the core "Specific Problem & Challenges" this paper addresses and analyze its difficulties. (Cite dummy references like [1], [2]).
+* **Paragraph 2 (Overview of Related Work):** State that researchers have proposed numerous works to solve this problem. Then, broadly categorize these existing works (e.g., "Generally, current research can be divided into two main categories: XXX-based methods [3]-[5] and YYY-based methods [6]-[8].").
+* **Paragraph 3 (Details of First Category):** Detail the first category of methods. Summarize their working principles and describe their evolution from classic to recent algorithms (supported by dummy references).
+* **Paragraph 4 (Details of Second Category & Transition):** Analyze the limitations of the first category to naturally introduce the second. Similarly, outline the working principles and evolution of the second category (supported by dummy references).
+* **Paragraph 5 (Motivation):** After reviewing the existing methods, pinpoint the common deficiencies or challenges, i.e., the "Motivation / Gaps in Research," which directly motivates this work.
+* **Paragraph 6 (Proposed Method):** In response to the motivation, formally introduce the proposed method: "To tackle the above issues, this paper proposes a novel algorithm, namely the ${v.method_name}." Briefly describe how it works and its main advantages.
+* **Paragraph 7 (Contributions):** List and elaborate on the core contributions and innovations of this paper. Use the "Contributions" information directly.
+* **Paragraph 8 (Overview of Experiments):** Briefly describe the experimental design. Mention the testbeds and the number of state-of-the-art algorithms used for comparison based on "Overview of Experiments."
+* **Paragraph 9 (Paper Organization):** Use a standard format to outline the paper's structure. E.g., "The rest of this paper is organized as follows. Section II reviews... Section III elaborates... Section IV presents... Finally, Section V concludes..."
+
+---
+Please start writing the introduction in English:
+`});
+
+        const conclusionGenerator = (v) => ({
+            title: '结论',
+            content: `
+You are an experienced academic advisor. Please write a Conclusion in English for an academic paper that adheres to the IEEE Transactions journal style, strictly following the paragraph-by-paragraph instruction template provided below based on the core information.
+
+Requirements:
+1.  **Strict Paragraph-by-Paragraph Correspondence**: Your output must strictly follow the structure and content requirements of the three paragraphs below.
+2.  **Conciseness**: Accurately summarize the work without introducing new information.
+3.  **Tense**: Use the past or present perfect tense to summarize completed work.
+4.  **Language and Style**: The entire text must be written in **English**, following **IEEE Transactions** conventions.
+
+---
+**Core Information:**
+
+* **Research Problem:** ${v.problem}
+* **Proposed Method:** ${v.method_name}
+* **Core Innovations & Advantages:**
+${v.innovations_list}
+* **Experiments & Results:** Under the setup of ${v.experiments}, the results show that ${v.results}.
+
+---
+**Conclusion Paragraph-by-Paragraph Template (Please generate the conclusion strictly following this structure):**
+
+* **Paragraph 1 (Summary of Work):** Reiterate that this paper proposed the "${v.method_name}" to solve the "${v.problem}". Then, concisely summarize its core ideas and main advantages, drawing from the "Core Innovations & Advantages."
+* **Paragraph 2 (Summary of Experimental Validation):** Summarize the experimental work, stating that "extensive experiments were conducted under the setup of ${v.experiments}." Reaffirm the main findings from "Experiments & Results" to prove the method's effectiveness.
+* **Paragraph 3 (Limitations and Future Work):** Objectively state potential limitations (preferably common ones in the field, e.g., "performance could be further improved in highly complex scenarios"). Then, suggest 2-3 future research directions, such as "future work will focus on enhancing..." or "applying the method to solve real-world problems in...".
+
+---
+Please start writing the conclusion in English:
+`});
+
+        generateAbstractBtn.addEventListener('click', () => handleGenerateClick(abstractGenerator));
+        generateIntroBtn.addEventListener('click', () => handleGenerateClick(introGenerator));
+        generateConclusionBtn.addEventListener('click', () => handleGenerateClick(conclusionGenerator));
+
+        copyBtn.addEventListener('click', () => {
+            if (navigator.clipboard && window.isSecureContext) {
+                navigator.clipboard.writeText(outputDiv.textContent).then(() => {
+                    copyBtn.innerHTML = '<i class="fa fa-check mr-2"></i>复制成功!';
+                    setTimeout(() => {
+                        copyBtn.innerHTML = originalCopyBtnHTML;
+                    }, 2000);
+                });
+            } else {
+                const textArea = document.createElement('textarea');
+                textArea.value = outputDiv.textContent;
+                textArea.style.position = 'fixed';
+                textArea.style.left = '-999999px';
+                document.body.appendChild(textArea);
+                textArea.focus();
+                textArea.select();
+                try {
+                    document.execCommand('copy');
+                    copyBtn.innerHTML = '<i class="fa fa-check mr-2"></i>复制成功!';
+                } catch (err) {
+                    console.error('Fallback copy failed', err);
+                    copyBtn.innerHTML = '<i class="fa fa-times mr-2"></i>复制失败';
+                } finally {
+                     setTimeout(() => {
+                        copyBtn.innerHTML = originalCopyBtnHTML;
+                    }, 2000);
+                    document.body.removeChild(textArea);
+                }
+            }
+        });
+    </script>
+
+</body>
+</html>
+
